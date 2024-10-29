@@ -14,7 +14,7 @@ class ProductoController extends Controller
     public function index()
     {
         //
-        $data=ProductoModel::All();
+        $data = ProductoModel::All();
         return response()->json($data);
     }
 
@@ -24,7 +24,7 @@ class ProductoController extends Controller
     public function store(Request $request)
     {
         //
-        $respuesta=ProductoModel::create($request->all());
+        $respuesta = ProductoModel::create($request->all());
         return response()->json($respuesta);
     }
 
@@ -34,6 +34,8 @@ class ProductoController extends Controller
     public function show(string $id)
     {
         //
+        $product = ProductoModel::find($id);
+        return response()->json($product);
     }
 
     /**
@@ -42,6 +44,13 @@ class ProductoController extends Controller
     public function update(Request $request, string $id)
     {
         //
+        $product = ProductoModel::find($id);
+        if (!$product) {
+            return response()->json(["message" => "Producto not found"], 404);
+        }
+
+        $product->update($request->all());
+        return response()->json($product);
     }
 
     /**
@@ -50,5 +59,12 @@ class ProductoController extends Controller
     public function destroy(string $id)
     {
         //
+        $product = ProductoModel::find($id);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $product->delete();
+        return response(["message" => 'Product deleted successfully']);
     }
 }
