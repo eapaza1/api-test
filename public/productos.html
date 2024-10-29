@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD de Productos</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center">CRUD de Productos</h2>
+
+        <!-- Formulario para Agregar/Editar Producto -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form id="productForm">
+                    <input type="hidden" id="productId">
+                    <div class="form-group">
+                        <label for="productName">Nombre</label>
+                        <input type="text" class="form-control" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productPrice">Precio</label>
+                        <input type="number" class="form-control" id="productPrice" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productDescription">Descripción</label>
+                        <textarea class="form-control" id="productDescription"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">Cancelar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de Productos -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="productTableBody">
+                <!-- Los productos se cargarán aquí -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const apiUrl = 'http://127.0.0.1:8000/api/productos';
+
+        // Cargar Productos
+        async function loadProducts() {
+            const response = await fetch(apiUrl);
+            const products = await response.json();
+            const productTableBody = document.getElementById('productTableBody');
+            productTableBody.innerHTML = '';
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.nombre}</td>
+                    <td>${product.precio}</td>
+                    <td>${product.descripcion || ''}</td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="editProduct(${product.id})">Editar</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Eliminar</button>
+                    </td>
+                `;
+                productTableBody.appendChild(row);
+            });
+        }
+
+        // Guardar o Actualizar Producto
+        document.getElementById('productForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const id = document.getElementById('productId').value;
+            const nombre = document.getElementById('productName').value;
+            const precio = document.getElementById('productPrice').value;
+            const descripcion = document.getElementById('productDescription').value;
+
+            const productData = { nombre, precio, descripcion };
+
+            if (id) {
+                await fetch(`${apiUrl}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productData)
+                });
+            } else {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(productData)
+                });
+            }
+
+            clearForm();
+            loadProducts();
+        });
+
+        // Editar Producto
+        async function editProduct(id) {
+            const response = await fetch(`${apiUrl}/${id}`);
+            const product = await response.json();
+            document.getElementById('productId').value = product.id;
+            document.getElementById('productName').value = product.nombre;
+            document.getElementById('productPrice').value = product.precio;
+            document.getElementById('productDescription').value = product.descripcion || '';
+        }
+
+        // Eliminar Producto
+        async function deleteProduct(id) {
+            await fetch(`${apiUrl}/${id}`, {
+                method: 'DELETE'
+            });
+            loadProducts();
+        }
+
+        // Limpiar Formulario
+        function clearForm() {
+            document.getElementById('productId').value = '';
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productDescription').value = '';
+        }
+
+        // Cargar productos al cargar la página
+        loadProducts();
+    </script>
+</body>
+</html>
